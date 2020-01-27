@@ -2,7 +2,8 @@
 % FEM by Kamil Burkiewicz
 % Made for Differential Equations Classes
 %
-function projekt(n)
+
+function FEM(n)
 tic
     % n -- number of elements for interval to be divide on
     %
@@ -15,17 +16,17 @@ tic
     % Approximation will be made using Finite Elements Method.
     %
     
-        %%%%%%%%%%%%%%%%
-        % coefficients %
-        %%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%
+        %% coefficients %%
+        %%%%%%%%%%%%%%%%%%
     a = @(x) 1;
     b = @(x) 0;
     c = @(x) -1;
     f = @(x) 0;
     
-        %%%%%%%%%%%%%
-        % constants %
-        %%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%
+        %% constants %%
+        %%%%%%%%%%%%%%%
     % This constant states for number of Legendre's polynomial used to
     % approximations of integrals (nodes and weights are precomputed at the
     % beginning of the program). Error is small due to specification of
@@ -41,59 +42,70 @@ tic
     [nodes, weights] = computeGaussLegendreCoefficients(pointsGaussLegendre);
     
     
-        %%%%%%%%%%%%%%%%%%
-        % filling matrix %
-        %%%%%%%%%%%%%%%%%%
     % Arrays to create sparse matrix. This approach lead to speed up of
     % computations and is recomended by MATLAB documentation.
-    I = zeros(1, 3 * (n + 1) - 2);
-    J = zeros(1, 3 * (n + 1) - 2);
-    V = zeros(1, 3 * (n + 1) - 2);
+    I = zeros(1, 3 * n - 2);
+    J = zeros(1, 3 * n - 2);
+    V = zeros(1, 3 * n - 2);
     
-    funcToIntegrate = @(i,j,x) a(x) * e_der(i,n,x,left,right) .* e_der(j,n,x,left,right) + ...
-                     b(x) * e_der(i,n,x,left,right) * e(j,n,x,left,right) + ...
-                     c(x) * e(i,n,x,left,right) * e(j,n,x,left,right);
-    for i = 1:n + 1
+    funcToIntegrate = @(i,j,x) a(x) .* e_der(i,n,x,left,right) .* e_der(j,n,x,left,right) + ...
+                     b(x) .* e_der(i,n,x,left,right) .* e(j,n,x,left,right) + ...
+                     c(x) .* e(i,n,x,left,right) .* e(j,n,x,left,right);
+    for i = 1:n
         for j = i - 1:i + 1
-            if (j >= 1 && j <= n + 1)
+            if (j >= 1 && j <= n)
                 % 3 * (i - 1) + j - i + 1 -- this transforms pair (i,j) to
                 % the number of the pair in ordering provided by these for
                 % loops f.e.   (1,0) -> no idx, (1,1) -> 1, (1,2) -> 2, 
                 % (2,1) -> 3, (2,2) -> 4 and so on
+                
                 idx = 3 * (i - 1) + j - i + 1;
                 I(idx) = i;
                 J(idx) = j;
-                leftIntegrationBound  = min((i - 1) * h, (j - 1) * h);
-                rightIntegrationBound = max((i + 1) * h, (j + 1) * h);
+                leftIntegrationBound  = max(min((i - 1) * h, (j - 1) * h), left);
+                rightIntegrationBound = min(max((i + 1) * h, (j + 1) * h), right);
                 
-               
-                V(idx) = GaussianLegendreQuadrature(@(x) funcToIntegrate(i - 1,j - 1,x), ...
+                %% Gausian quadrature %%
+                %{
+                V(idx) = GaussianLegendreQuadrature(@(x) funcToIntegrate(i ,j ,x), ...
                     leftIntegrationBound, rightIntegrationBound, nodes, weights) - ...
-                    a(right) * e(i - 1,n,right,left,right) * e(j - 1,n,right,left,right);
+                    a(right) * e(i,n,right,left,right) * e(j,n,right,left,right);
+                %}
+                
+                
+                %% Matlab numerical integration %%
+                
+                V(idx) = integral(@(x) funcToIntegrate(i, j, x), leftIntegrationBound, rightIntegrationBound)- ...
+                    a(right) * e(i,n,right,left,right) * e(j,n,right,left,right);
+                
             end
         end
     end
     % make sparse matrix from values calculated in loop above 
     A = sparse(I,J,V);
     
-        %%%%%%%%%%%%%%%%%%
-        % filling vector %
-        %%%%%%%%%%%%%%%%%%    
-    B = zeros(n + 1, 1);
-    funcToIntegrate = @(i,x) f(x) * e(i,n,x,left,right);
-    for i = 1:n + 1
-        leftIntegrationBound  = (i - 1) * h;
-        rightIntegrationBound = (i + 1) * h;
-        B(i) = GaussianLegendreQuadrature(@(x) funcToIntegrate(i - 1, x),...
+    B = zeros(n, 1);
+    funcToIntegrate = @(i,x) f(x) .* e(i,n,x,left,right);
+    for i = 1:n
+        leftIntegrationBound  = max((i - 1) * h, left);
+        rightIntegrationBound = min((i + 1) * h, right);
+        
+        %% Gaussian quadrature %%
+        %{
+        B(i) = GaussianLegendreQuadrature(@(x) funcToIntegrate(i, x),...
                 leftIntegrationBound, rightIntegrationBound, nodes, weights);
+        %}
+        
+        %% Matlab numerical integration %%
+        
+        B(i) = integral(@(x) funcToIntegrate(i, x), leftIntegrationBound, ...
+                rightIntegrationBound);
+            
     end
 
-        %%%%%%%%%%%%%%%%
-        % coefficients %
-        %%%%%%%%%%%%%%%%
-    
-    % finding coefficients is just solving system of linear equations of the form
-    % A X = B, where A and B where values in these matices was computed earlier.
+        %%%%%%%%%%%%%%%%%%
+        %% coefficients %%
+        %%%%%%%%%%%%%%%%%%
     coeff = A \ B;
     
     draw(coeff, left, right, n);
@@ -138,7 +150,7 @@ end
 
 
 
-function g = GaussianLegendreQuadrature(integrandFun, l, r, nodes, weights)
+function g = GaussianLegendreQuadrature(integrandFunc, l, r, nodes, weights)
     % Quadrature is made using number of points specified in constants.
     % nodes and weights have to be passed as a function argument.
     % integrandFun -- function to integrate
@@ -152,15 +164,11 @@ function g = GaussianLegendreQuadrature(integrandFun, l, r, nodes, weights)
     
         % if interval is different from [-1,1] we have to translate it
         % using affine transform
-    a = 1;
-    b = 0;
-    if (l ~= -1 || r ~= 1)
-        a = (r - l) / 2;
-        b = (r + l) / 2;
-    end
+    a = (r - l) / 2;
+    b = (r + l) / 2;
     
     for i = 1:n
-        sum = sum + weights(i) * integrandFun(a * nodes(i) + b);
+        sum = sum + weights(i) * integrandFunc(a * nodes(i) + b);
     end
     
     g = a * sum;
@@ -172,7 +180,7 @@ function e = e(k, n, x, l, r)
     % l -- left boundary of interval
     % r -- righht boundary of interval
     h = (r - l) / n;
-    e = max((1 - abs(x - k * h) /h), 0);
+    e = max((1 - abs(x - k * h) / h), 0);
 end
 
 
@@ -197,9 +205,9 @@ end
 
 function draw(coeff, l, r, n)
     u = @(x) e_linear_combination(coeff, n, x, l, r);
-    points = l:(r-l)/n:r;
+    points = l : (r - l) / n : r;
     values = zeros(n + 1, 1);
-    
+
     for i = 1:n + 1
         values(i) = u(points(i));
     end
@@ -218,7 +226,7 @@ function lc = e_linear_combination(coeff, n, x, l, r)
     % from coeff list
     sum = 0;
     for i = 1:length(coeff)
-        sum = sum + coeff(i) * e(i, n, x, l, r);
+        sum = sum + coeff(i) .* e(i, n, x, l, r);
     end
     
     lc = sum;
