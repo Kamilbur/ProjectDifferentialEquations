@@ -15,13 +15,19 @@ u'(k) - u(k) = 0
 
 Equation proposed in classes:
 
-<img src="DiffEq.png" width="256" height="300"
+<img src="Pictures/DiffEq.png" width="256" height="300"
      alt="DiffEq.png"
      style="width: 0px; height: 0px; float: left; margin-right: 10px;" />
      
 Graph of the solution(constant function):
 
-<img src="DiffEqSolution1.png"
+<img src="Pictures/DiffEqSolution1.png"
      alt="DiffEqSolution1.png"
      style="float: left; margin-right: 10px;" />
      
+
+Also here is a graph of the solution to the equation u'' + u = sin(x) on the interval [0, pi / 2]
+
+<img src="Pictures/DiffEqSolutionExample.png"
+     alt="DiffEqSolutionExample.png"
+     style="float: left; margin-right: 10px;" />
