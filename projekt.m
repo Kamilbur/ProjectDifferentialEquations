@@ -1,3 +1,7 @@
+%
+% FEM by Kamil Burkiewicz
+% Made for Differential Equations Classes
+%
 function projekt(n)
 tic
     % n -- number of elements for interval to be divide on
@@ -7,6 +11,9 @@ tic
     % 
     %                     u(0) = 0
     %              u'(right) - u(right) = 0
+    %
+    % Approximation will be made using Finite Elements Method.
+    %
     
         %%%%%%%%%%%%%%%%
         % coefficients %
@@ -34,6 +41,9 @@ tic
     [nodes, weights] = computeGaussLegendreCoefficients(pointsGaussLegendre);
     
     
+        %%%%%%%%%%%%%%%%%%
+        % filling matrix %
+        %%%%%%%%%%%%%%%%%%
     % Arrays to create sparse matrix. This approach lead to speed up of
     % computations and is recomended by MATLAB documentation.
     I = zeros(1, 3 * (n + 1) - 2);
@@ -66,7 +76,9 @@ tic
     % make sparse matrix from values calculated in loop above 
     A = sparse(I,J,V);
     
-    
+        %%%%%%%%%%%%%%%%%%
+        % filling vector %
+        %%%%%%%%%%%%%%%%%%    
     B = zeros(n + 1, 1);
     funcToIntegrate = @(i,x) f(x) * e(i,n,x,left,right);
     for i = 1:n + 1
@@ -79,6 +91,9 @@ tic
         %%%%%%%%%%%%%%%%
         % coefficients %
         %%%%%%%%%%%%%%%%
+    
+    % finding coefficients is just solving system of linear equations of the form
+    % A X = B, where A and B where values in these matices was computed earlier.
     coeff = A \ B;
     
     draw(coeff, left, right, n);
@@ -159,6 +174,8 @@ function e = e(k, n, x, l, r)
     h = (r - l) / n;
     e = max((1 - abs(x - k * h) /h), 0);
 end
+
+
 
 function e_der = e_der(k, n, x, l, r)
     % derivatives of e functions
