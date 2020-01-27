@@ -1,6 +1,7 @@
 # ProjectDifferentialEquations
 
-Program finds approximate solutions for second order differential equations of the form on the interval [0,k]
+Program finds approximate solutions for the second order linear differential equations on the interval [0,k]
+Equations are of the form
 
 -(a(x) u'(x))' + b(x) u'(x) + c(x) u(x) = f(x)
 
