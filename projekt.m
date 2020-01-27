@@ -86,6 +86,8 @@ tic
 toc % tic at the beginning and toc at the end for measurement of running time 
 end
 
+
+
 function [nodes, weights] = computeGaussLegendreCoefficients(n)
     % n - number of points to be used in later quadrature
     
@@ -119,6 +121,8 @@ function [nodes, weights] = computeGaussLegendreCoefficients(n)
     end
 end
 
+
+
 function g = GaussianLegendreQuadrature(integrandFun, l, r, nodes, weights)
     % Quadrature is made using number of points specified in constants.
     % nodes and weights have to be passed as a function argument.
@@ -147,6 +151,8 @@ function g = GaussianLegendreQuadrature(integrandFun, l, r, nodes, weights)
     g = a * sum;
 end
 
+
+
 function e = e(k, n, x, l, r)
     % l -- left boundary of interval
     % r -- righht boundary of interval
@@ -170,6 +176,8 @@ function e_der = e_der(k, n, x, l, r)
     e_der = val;
 end
 
+
+
 function draw(coeff, l, r, n)
     u = @(x) e_linear_combination(coeff, n, x, l, r);
     points = l:(r-l)/n:r;
@@ -185,6 +193,8 @@ function draw(coeff, l, r, n)
     hold off;
 
 end
+
+
 
 function lc = e_linear_combination(coeff, n, x, l, r)
     % linear combination of base functions e determined by coefficients
