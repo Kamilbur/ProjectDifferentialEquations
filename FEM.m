@@ -1,5 +1,8 @@
-%
-% FEM by Kamil Burkiewicz
+%                    %%%%%%%%%
+                     %% FEM %%
+%                    %%%%%%%%%
+%                    
+% by Kamil Burkiewicz
 % Made for Differential Equations Classes
 %
 
@@ -29,8 +32,8 @@ tic
         %%%%%%%%%%%%%%%
     % This constant states for number of Legendre's polynomial used to
     % approximations of integrals (nodes and weights are precomputed at the
-    % beginning of the program). Error is small due to specification of
-    % base functions.
+    % beginning of the program). Error for this greater than two is small
+    % due to specification of base functions.
     pointsGaussLegendre = 3;
     % Boundaries
     left = 0;
@@ -41,6 +44,9 @@ tic
     % Values necessary for Gauss-Legendre quadrature
     [nodes, weights] = computeGaussLegendreCoefficients(pointsGaussLegendre);
     
+    %%%%%%%%%%%%%%%%%%%%%%
+    %% Filling matrices %%
+    %%%%%%%%%%%%%%%%%%%%%%
     
     % Arrays to create sparse matrix. This approach lead to speed up of
     % computations and is recomended by MATLAB documentation.
@@ -62,20 +68,15 @@ tic
                 idx = 3 * (i - 1) + j - i + 1;
                 I(idx) = i;
                 J(idx) = j;
-                leftIntegrationBound  = max(min((i - 1) * h, (j - 1) * h), left);
-                rightIntegrationBound = min(max((i + 1) * h, (j + 1) * h), right);
                 
-                %% Gausian quadrature %%
-                %{
+                % integration boundaries are set to the boundaries of
+                % support of this function to maximalize the accuracy of
+                % numerical computations
+                leftIntegrationBound  = max(max((i - 1) * h, (j - 1) * h), left);
+                rightIntegrationBound = min(min((i + 1) * h, (j + 1) * h), right);
+                
                 V(idx) = GaussianLegendreQuadrature(@(x) funcToIntegrate(i ,j ,x), ...
                     leftIntegrationBound, rightIntegrationBound, nodes, weights) - ...
-                    a(right) * e(i,n,right,left,right) * e(j,n,right,left,right);
-                %}
-                
-                
-                %% Matlab numerical integration %%
-                
-                V(idx) = integral(@(x) funcToIntegrate(i, j, x), leftIntegrationBound, rightIntegrationBound)- ...
                     a(right) * e(i,n,right,left,right) * e(j,n,right,left,right);
                 
             end
@@ -89,20 +90,12 @@ tic
     for i = 1:n
         leftIntegrationBound  = max((i - 1) * h, left);
         rightIntegrationBound = min((i + 1) * h, right);
-        
-        %% Gaussian quadrature %%
-        %{
-        B(i) = GaussianLegendreQuadrature(@(x) funcToIntegrate(i, x),...
-                leftIntegrationBound, rightIntegrationBound, nodes, weights);
-        %}
-        
-        %% Matlab numerical integration %%
-        
-        B(i) = integral(@(x) funcToIntegrate(i, x), leftIntegrationBound, ...
-                rightIntegrationBound);
-            
-    end
 
+        B(i) = GaussianLegendreQuadrature(@(x) funcToIntegrate(i, x), ...
+               leftIntegrationBound, rightIntegrationBound, nodes, weights);
+        
+    end
+    
         %%%%%%%%%%%%%%%%%%
         %% coefficients %%
         %%%%%%%%%%%%%%%%%%
