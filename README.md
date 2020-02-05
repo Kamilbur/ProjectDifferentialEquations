@@ -27,6 +27,7 @@ Graph of the solution(constant function):
      
 
 Also here is a graph of the solution to the equation u'' + u = sin(x) on the interval [0, pi / 2]
+On the left graph of exact solution found by Wolfram Alpha. On the right approximate FEM solutiom.
 
 <img src="Pictures/DiffEqSolutionExample.png"
      alt="DiffEqSolutionExample.png"
